@@ -8,9 +8,11 @@
 </head>
 
 <body>
-  <button id="start_daq">start_daq</button>
-  <button id="start_bpm">start_bpm</button>
-<br>
+  <button id="start_daq" onclick="sendCommand('start_daq')">start_daq</button>
+  <button id="stop_daq" onclick="sendCommand('stop_daq')">stop_daq</button>
+  <button id="start_bpm" onclick="sendCommand('start_bpm')">start_bpm</button>
+  <button id="stop_bpm" onclick="sendCommand('stop_bpm')">stop_bpm</button>
+  <br>
   <textarea id="textarea_ID" style="height: 200px;"></textarea>
 
   <!-- You can also require other files to run in this process -->
@@ -18,15 +20,9 @@
   <script type="text/javascript">
     const ipcRenderer = require('electron').ipcRenderer;
 
-    const btnclick = document.getElementById('start_daq');
-    btnclick.addEventListener('click', function () {
-      ipcRenderer.send("serial-port-write", "start_daq");
-    });
-
-    const btnclick2 = document.getElementById('start_bpm');
-    btnclick2.addEventListener('click', function () {
-      ipcRenderer.send("serial-port-write", "start_bpm");
-    });
+    function sendCommand(command) {
+       ipcRenderer.send("serial-port-write", command);
+    }
 
     ipcRenderer.on('new-line', function (event, param) {
       document.getElementById('textarea_ID').value += param + '\r\n';
