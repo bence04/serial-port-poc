@@ -19,7 +19,7 @@
 
     .command-button {
       display: block;
-      width: 100px;
+      width: 120px;
       margin-bottom: 8px;
     }
   </style>
@@ -28,6 +28,9 @@
 <body>
   <textarea id="textarea_ID"></textarea>
   <div class="buttons">
+    <button id="connect_device" class="command-button" onclick="connect()">connect_device</button>
+    <button id="disconnect_device" class="command-button" onclick="disconnect()">disconnect_device</button>
+    <button id="is_connected" class="command-button" onclick="isConnectedToDevice()">is_connected</button>
     <button id="start_daq" class="command-button" onclick="sendCommand('start_daq')">start_daq</button>
     <button id="stop_daq" class="command-button" onclick="sendCommand('stop_daq')">stop_daq</button>
     <button id="start_bpm" class="command-button" onclick="sendCommand('start_bpm')">start_bpm</button>
@@ -41,6 +44,15 @@
 
     function sendCommand(command) {
       ipcRenderer.send("serial-port-write", command);
+    }
+    function connect() {
+      ipcRenderer.send("connect");
+    }
+    function disconnect() {
+      ipcRenderer.send("disconnect");
+    }
+    function isConnectedToDevice() {
+      ipcRenderer.send("isConnected");
     }
 
     ipcRenderer.on('new-line', function (event, param) {

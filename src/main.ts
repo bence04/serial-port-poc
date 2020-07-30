@@ -1,8 +1,10 @@
-import { app, BrowserWindow, ipcMain, ipcRenderer } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import * as path from "path";
-import * as SerialPort from "serialport";
+import { DeviceCommunication } from "./comSDK/device-communication";
 
-const port = new SerialPort("COM4", { baudRate: 9600 });
+/* const port = new SerialPort("COM4", { baudRate: 9600 }); */
+
+const deviceCom = new DeviceCommunication("COM4", 9600);
 
 function createWindow() {
   // Create the browser window.
@@ -20,18 +22,34 @@ function createWindow() {
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, "../index.html"));
 
-  port.open(() => {
-    console.log('Connected');
-  });
-
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 }
 
 ipcMain.on("serial-port-write", (event: any, arg: any) => {
-  port.write(arg);
+  /* port.write(arg);
   event.sender.send("new-line", arg + ' sent');
-  port.on('data', (line: string) => event.sender.send("new-line", "> " + line))
+  port.on('data', (line: string) => event.sender.send("new-line", "> " + line)) */
+});
+
+ipcMain.on("connect", (event: any) => {
+  deviceCom.connect().then(() => {
+    event.sender.send("new-line", 'connected');
+  }).catch((error) => {
+    event.sender.send("new-line", 'connection error: ' + JSON.stringify(error));
+  });
+});
+
+ipcMain.on("disconnect", (event: any) => {
+  deviceCom.disconnect().then(() => {
+    event.sender.send("new-line", 'disconnected');
+  }).catch((error) => {
+    event.sender.send("new-line", 'connection close error: ' + JSON.stringify(error));
+  });
+});
+
+ipcMain.on("isConnected", (event: any) => {
+  event.sender.send("new-line", 'isConnected: ' + deviceCom.isConnected());
 });
 
 // This method will be called when Electron has finished
