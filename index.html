@@ -5,15 +5,36 @@
   <meta charset="UTF-8">
   <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
   <title>Hello World!</title>
+
+  <style>
+    #textarea_ID {
+      height: calc(100vh - 20px);
+      float: left;
+    }
+
+    .buttons {
+      float: left;
+      margin-left: 12px;
+    }
+
+    .command-button {
+      display: block;
+      width: 100px;
+      margin-bottom: 8px;
+    }
+
+
+  </style>
 </head>
 
 <body>
-  <button id="start_daq" onclick="sendCommand('start_daq')">start_daq</button>
-  <button id="stop_daq" onclick="sendCommand('stop_daq')">stop_daq</button>
-  <button id="start_bpm" onclick="sendCommand('start_bpm')">start_bpm</button>
-  <button id="stop_bpm" onclick="sendCommand('stop_bpm')">stop_bpm</button>
-  <br>
-  <textarea id="textarea_ID" style="height: 200px;"></textarea>
+  <textarea id="textarea_ID"></textarea>
+  <div class="buttons">
+    <button id="start_daq" class="command-button" onclick="sendCommand('start_daq')">start_daq</button>
+    <button id="stop_daq" class="command-button" onclick="sendCommand('stop_daq')">stop_daq</button>
+    <button id="start_bpm" class="command-button" onclick="sendCommand('start_bpm')">start_bpm</button>
+    <button id="stop_bpm" class="command-button" onclick="sendCommand('stop_bpm')">stop_bpm</button>
+  </div>
 
   <!-- You can also require other files to run in this process -->
   <script src="./renderer.js"></script>
