@@ -27,6 +27,7 @@ function createWindow() {
 }
 
 ipcMain.on("serial-port-write", (event: any, arg: any) => {
+  deviceCom.startDaq().then(() => event.sender.send("new-line", 'startdaq sent')).catch((e) => event.sender.send("new-line", 'startdaq sent error: ' + e));
   /* port.write(arg);
   event.sender.send("new-line", arg + ' sent');
   port.on('data', (line: string) => event.sender.send("new-line", "> " + line)) */

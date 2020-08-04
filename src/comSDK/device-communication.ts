@@ -16,7 +16,8 @@ export class DeviceCommunication {
             try {
                 this.openedPort = new SerialPort(this.port, { baudRate: this.baudRate });
                 this.openedPort.open(() => {
-                    this.openedPort.on('data', (data) => this.dataProccess(data));
+                    this.dataProccess();
+                    resolve();
                 });
             } catch (error) {
                 reject(error);
@@ -24,11 +25,22 @@ export class DeviceCommunication {
         });
     }
 
-    public isConnected() {
+    public startDaq(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            try {
+                this.sendCommand('start_daq');
+                resolve();
+            } catch (error) {
+                reject(error)
+            }
+        });
+    }
+
+    public isConnected(): boolean {
         return (this.openedPort) ? this.openedPort.isOpen : false;
     }
 
-    public disconnect() {
+    public disconnect(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 this.openedPort.close(() => resolve())
@@ -38,7 +50,43 @@ export class DeviceCommunication {
         });
     }
 
-    private dataProccess(data: any) {
-        console.log(data);
+    private sendCommand(command: string): void {
+        if (this.isConnected()) {
+            this.openedPort.write(command);
+        } else {
+            throw new Error("No connected device");
+        }
+    }
+
+    private dataProccess(): void {
+        this.openedPort.on('data', data => console.log(this.convert(data)))
+    }
+
+    convert(dataArr: any) {
+        /* console.log('____');
+        console.log(dataArr[0]);
+        const length = dataArr.length;
+        console.log(length);
+
+        const buffer = Buffer.from(dataArr);
+
+        console.log(buffer.readUInt32BE(0));
+ */
+
+       /*  let Uint8Arr = new Uint8Array(4);
+
+        Uint8Arr[0] = 0x12;
+        Uint8Arr[1] = 0x19;
+        Uint8Arr[2] = 0x21;
+        Uint8Arr[3] = 0x47;
+
+        let buffer = Buffer.from(Uint8Arr); */
+
+        // save in temp array
+        // subscribe to observable (osb in sdk, subscribe in component)
+        const uint32array = new Uint32Array(dataArr);
+
+        console.log(uint32array);
+        return 'buffer';
     }
 }
