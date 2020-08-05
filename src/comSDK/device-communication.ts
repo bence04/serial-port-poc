@@ -1,7 +1,7 @@
 import * as SerialPort from "serialport";
 import { config } from "./config";
-import { interval, Observable } from 'rxjs';
-import { bufferCount, buffer } from 'rxjs/operators';
+import { interval, Observable, Subject } from 'rxjs';
+import { bufferCount, buffer, reduce } from 'rxjs/operators';
 
 export class DeviceCommunication {
     private openedPort: SerialPort;
@@ -61,13 +61,56 @@ export class DeviceCommunication {
         }
     }
 
+    private bufferToArray(buffer: any) {
+        return Object.keys(buffer).map((index) => {
+            return buffer[index];
+        });
+    }
+
     private dataProccess(): void {
-        const subscribe = Observable.create((obs: any) => this.openedPort.on('data', data => obs.next(data))).pipe(
+        const store = new Subject();
+        const kovi = new Subject();
+
+        this.openedPort.on('data', data => store.next(this.bufferToArray(data)));
+
+        store.pipe(
+            reduce((acc, curr: any[]) => {
+                let sliced = [];
+                if (acc.length === 0) {
+                    sliced = this.sliceArray(curr, config.PACKET_SIZE);
+                } else {
+                    sliced = this.sliceArray(acc.concat(curr), config.PACKET_SIZE);
+                }
+
+                // tslint:disable-next-line: prefer-for-of
+                for (let i = 0; i < sliced.length; i++) {
+                    if (sliced[i].length === config.PACKET_SIZE) {
+                        kovi.next(sliced[i]);
+                    } else {
+                        return sliced[i];
+                    }
+                }
+                return [];
+
+            }, []),
+        ).subscribe(x => console.log('original', x));
+        kovi.pipe(bufferCount(config.PACKETS_IN_BLOCK))
+            .subscribe(x => console.table(x));
+
+       /*  const subscribe = Observable.create((obs: any) => this.openedPort.on('data', data => obs.next(data))).pipe(
             bufferCount(2)
         ).subscribe((val: any) =>
             console.log('Buffered Values:', val)
-        );
+        ); */
     }
+
+    sliceArray(array: any[], columnLength: number) {
+        return Array.from(
+            { length: Math.ceil(array.length / columnLength) },
+            (_, i) => array.slice(i * columnLength, i * columnLength + columnLength)
+        )
+    }
+
 
     convert(dataArr: any) {
         /* console.log('____');
