@@ -11,7 +11,6 @@ void loop() {
       while(true) {
         Serial.write(myArray, 546);
         delay(500);
-        Serial.println("wait 500ms");
         if(Serial.readString() == "stop_daq") {
           break;
         }

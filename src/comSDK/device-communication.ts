@@ -1,4 +1,7 @@
 import * as SerialPort from "serialport";
+import { config } from "./config";
+import { interval, Observable } from 'rxjs';
+import { bufferCount, buffer } from 'rxjs/operators';
 
 export class DeviceCommunication {
     private openedPort: SerialPort;
@@ -59,7 +62,11 @@ export class DeviceCommunication {
     }
 
     private dataProccess(): void {
-        this.openedPort.on('data', data => console.log(this.convert(data)))
+        const subscribe = Observable.create((obs: any) => this.openedPort.on('data', data => obs.next(data))).pipe(
+            bufferCount(2)
+        ).subscribe((val: any) =>
+            console.log('Buffered Values:', val)
+        );
     }
 
     convert(dataArr: any) {
@@ -84,6 +91,7 @@ export class DeviceCommunication {
 
         // save in temp array
         // subscribe to observable (osb in sdk, subscribe in component)
+        // rxjs buffer, buffercount, minden subjectbe -> sok pipe
         const uint32array = new Uint32Array(dataArr);
 
         console.log(uint32array);
