@@ -1,17 +1,19 @@
 import * as SerialPort from "serialport";
 import { config } from "./config";
 import { interval, Observable, Subject } from 'rxjs';
-import { bufferCount, buffer, reduce } from 'rxjs/operators';
+import { bufferCount, buffer, reduce, map } from 'rxjs/operators';
 
 export class DeviceCommunication {
     private openedPort: SerialPort;
     private port: string;
     private baudRate: number;
+    private callback: (data: any) => void;
 
-    constructor(_port: string, _baudRate: number) {
+    constructor(_port: string, _baudRate: number, _callback: (data: any) => void) {
         console.log('class constructor');
         this.port = _port;
         this.baudRate = _baudRate;
+        this.callback = _callback;
     }
 
     public connect(): Promise<void> {
@@ -61,9 +63,9 @@ export class DeviceCommunication {
         }
     }
 
-    private bufferToArray(buffer: any) {
-        return Object.keys(buffer).map((index) => {
-            return buffer[index];
+    private bufferToArray(bufferArr: any) {
+        return Object.keys(bufferArr).map((index) => {
+            return bufferArr[index];
         });
     }
 
@@ -82,62 +84,53 @@ export class DeviceCommunication {
                     sliced = this.sliceArray(acc.concat(curr), config.PACKET_SIZE);
                 }
 
-                // tslint:disable-next-line: prefer-for-of
-                for (let i = 0; i < sliced.length; i++) {
-                    if (sliced[i].length === config.PACKET_SIZE) {
-                        kovi.next(sliced[i]);
+                for (const slice of sliced) {
+                    if (slice.length === config.PACKET_SIZE) {
+                        kovi.next(slice);
                     } else {
-                        return sliced[i];
+                        return slice;
                     }
                 }
                 return [];
 
             }, []),
-        ).subscribe(x => console.log('original', x));
-        kovi.pipe(bufferCount(config.PACKETS_IN_BLOCK))
-            .subscribe(x => console.table(x));
+        ).subscribe();
 
-       /*  const subscribe = Observable.create((obs: any) => this.openedPort.on('data', data => obs.next(data))).pipe(
-            bufferCount(2)
-        ).subscribe((val: any) =>
-            console.log('Buffered Values:', val)
-        ); */
+
+        kovi.pipe(
+            map((data: any[]) => {
+                /* const returnData = [];
+                returnData[0] = String.fromCharCode(data[0]);
+                returnData[1] = String.fromCharCode(data[1]);
+                return returnData; */
+                return data;
+            }),
+            bufferCount(config.PACKETS_IN_BLOCK)
+        ).subscribe(x => {
+            this.callback(x);
+        });
     }
 
-    sliceArray(array: any[], columnLength: number) {
+    private sliceArray(array: any[], columnLength: number) {
         return Array.from(
             { length: Math.ceil(array.length / columnLength) },
             (_, i) => array.slice(i * columnLength, i * columnLength + columnLength)
         )
     }
 
-
-    convert(dataArr: any) {
-        /* console.log('____');
-        console.log(dataArr[0]);
-        const length = dataArr.length;
-        console.log(length);
-
-        const buffer = Buffer.from(dataArr);
-
-        console.log(buffer.readUInt32BE(0));
- */
-
-       /*  let Uint8Arr = new Uint8Array(4);
-
-        Uint8Arr[0] = 0x12;
-        Uint8Arr[1] = 0x19;
-        Uint8Arr[2] = 0x21;
-        Uint8Arr[3] = 0x47;
-
-        let buffer = Buffer.from(Uint8Arr); */
-
-        // save in temp array
-        // subscribe to observable (osb in sdk, subscribe in component)
-        // rxjs buffer, buffercount, minden subjectbe -> sok pipe
-        const uint32array = new Uint32Array(dataArr);
-
-        console.log(uint32array);
-        return 'buffer';
+    private checkChecksum(array: any[]) {
+        // TODO CHEKCUM
+    }
+    private calcECG(array: any[]) {
+        // TODO ECG
+    }
+    private calcEGG(array: any[]) {
+        // TODO EGG
+    }
+    private calcTemp(array: any[]) {
+        // TODO temp
+    }
+    private calcSPO2(array: any[]) {
+        // TODO SPO2
     }
 }

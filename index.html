@@ -55,6 +55,11 @@
       ipcRenderer.send("isConnected");
     }
 
+    ipcRenderer.on('get-new-data', function (event, param) {
+      // document.getElementById('textarea_ID').value += param + '\r\n';
+      console.table(param)
+    });
+
     ipcRenderer.on('new-line', function (event, param) {
       document.getElementById('textarea_ID').value += param + '\r\n';
     });

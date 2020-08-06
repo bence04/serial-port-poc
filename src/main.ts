@@ -1,14 +1,15 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, ipcRenderer } from "electron";
 import * as path from "path";
 import { DeviceCommunication } from "./comSDK/device-communication";
 
 /* const port = new SerialPort("COM4", { baudRate: 9600 }); */
 
-const deviceCom = new DeviceCommunication("COM4", 9600);
+const deviceCom = new DeviceCommunication("COM4", 9600, processDeviceData);
+let mainWindow: BrowserWindow;
 
 function createWindow() {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -26,11 +27,12 @@ function createWindow() {
   mainWindow.webContents.openDevTools();
 }
 
+function processDeviceData(data: any) {
+  mainWindow.webContents.send('get-new-data', data);
+}
+
 ipcMain.on("serial-port-write", (event: any, arg: any) => {
   deviceCom.startDaq().then(() => event.sender.send("new-line", 'startdaq sent')).catch((e) => event.sender.send("new-line", 'startdaq sent error: ' + e));
-  /* port.write(arg);
-  event.sender.send("new-line", arg + ' sent');
-  port.on('data', (line: string) => event.sender.send("new-line", "> " + line)) */
 });
 
 ipcMain.on("connect", (event: any) => {
